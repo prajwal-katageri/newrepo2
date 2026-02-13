@@ -2,6 +2,22 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Backend API URL (important for Vercel)
+
+This frontend calls a separate backend API. Configure the backend base URL via:
+
+- `REACT_APP_API_BASE_URL` (example: `https://your-backend-host.example.com`)
+
+If not set, it defaults to `http://localhost:8081` for local development.
+
+### Vercel notes
+
+If deploying from the monorepo, set **Root Directory** to `hospital-opd/opd-frontend`.
+
+Then in Vercel set the environment variable:
+
+- `REACT_APP_API_BASE_URL` = your deployed backend URL
+
 ## Available Scripts
 
 In the project directory, you can run:

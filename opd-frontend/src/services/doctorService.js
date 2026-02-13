@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const BASE_URL = 'http://localhost:8081/api/doctors';
+import api from './api';
 
 const doctorService = {
   /**
@@ -8,7 +6,7 @@ const doctorService = {
    */
   addDoctor: async (doctor) => {
     try {
-      const response = await axios.post(BASE_URL, doctor);
+      const response = await api.post('/doctors', doctor);
       return response.data;
     } catch (error) {
       console.error('Error adding doctor:', error);
@@ -21,7 +19,7 @@ const doctorService = {
    */
   getDoctors: async () => {
     try {
-      const response = await axios.get(BASE_URL);
+      const response = await api.get('/doctors');
       return response.data;
     } catch (error) {
       console.error('Error fetching doctors:', error);
@@ -34,7 +32,7 @@ const doctorService = {
    */
   getDoctorById: async (id) => {
     try {
-      const response = await axios.get(`${BASE_URL}/${id}`);
+      const response = await api.get(`/doctors/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching doctor:', error);
@@ -47,7 +45,7 @@ const doctorService = {
    */
   getDoctorsByStatus: async (status) => {
     try {
-      const response = await axios.get(`${BASE_URL}/status/${status}`);
+      const response = await api.get(`/doctors/status/${status}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching doctors by status:', error);
@@ -60,7 +58,7 @@ const doctorService = {
    */
   getDoctorsBySpecialization: async (specialization) => {
     try {
-      const response = await axios.get(`${BASE_URL}/specialization/${specialization}`);
+      const response = await api.get(`/doctors/specialization/${specialization}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching doctors by specialization:', error);
@@ -73,7 +71,7 @@ const doctorService = {
    */
   updateDoctor: async (id, doctor) => {
     try {
-      const response = await axios.put(`${BASE_URL}/${id}`, doctor);
+      const response = await api.put(`/doctors/${id}`, doctor);
       return response.data;
     } catch (error) {
       console.error('Error updating doctor:', error);
@@ -86,7 +84,7 @@ const doctorService = {
    */
   deleteDoctor: async (id) => {
     try {
-      await axios.delete(`${BASE_URL}/${id}`);
+      await api.delete(`/doctors/${id}`);
     } catch (error) {
       console.error('Error deleting doctor:', error);
       throw error;

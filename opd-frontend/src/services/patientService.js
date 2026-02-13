@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const BASE_URL = 'http://localhost:8081/api/patients';
+import api from './api';
 
 const patientService = {
   /**
@@ -8,7 +6,7 @@ const patientService = {
    */
   getPatients: async () => {
     try {
-      const response = await axios.get(BASE_URL);
+      const response = await api.get('/patients');
       return response.data;
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -21,7 +19,7 @@ const patientService = {
    */
   addPatient: async (patient) => {
     try {
-      const response = await axios.post(BASE_URL, patient);
+      const response = await api.post('/patients', patient);
       return response.data;
     } catch (error) {
       console.error('Error adding patient:', error);
@@ -34,7 +32,7 @@ const patientService = {
    */
   deletePatient: async (id) => {
     try {
-      const response = await axios.delete(`${BASE_URL}/${id}`);
+      const response = await api.delete(`/patients/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting patient:', error);

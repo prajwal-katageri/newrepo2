@@ -1,16 +1,12 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8081/api/patients';
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081';
 
-const axiosInstance = axios.create({
-  baseURL: API_URL,
+const api = axios.create({
+  baseURL: `${API_BASE_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-export const getPatients = () => axiosInstance.get('/');
-
-export const createPatient = (patientData) => axiosInstance.post('/', patientData);
-
-export default axiosInstance;
+export default api;

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 
 export default function Login() {
   const [user, setUser] = useState({ username: "", password: "" });
@@ -19,7 +19,7 @@ export default function Login() {
     setError("");
     
     try {
-      const res = await axios.post("http://localhost:8081/api/auth/login", user);
+      const res = await api.post("/auth/login", user);
       localStorage.setItem("token", res.data);
       navigate("/patients");
     } catch (err) {
