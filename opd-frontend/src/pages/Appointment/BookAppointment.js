@@ -14,14 +14,47 @@ function BookAppointment() {
     doctorName: '',
     appointmentTime: ''
   });
+  const [minAppointmentTime, setMinAppointmentTime] = useState('');
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const toDateTimeLocal = (date) => {
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const year = date.getFullYear();
+    const month = pad2(date.getMonth() + 1);
+    const day = pad2(date.getDate());
+    const hours = pad2(date.getHours());
+    const minutes = pad2(date.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const getMinSelectableDateTime = () => {
+    const now = new Date();
+    const min = new Date(now);
+
+    // `datetime-local` is minute-granular in our UI; if we're mid-minute,
+    // bump min to the next minute to avoid allowing an already-past time.
+    const shouldBumpMinute = now.getSeconds() > 0 || now.getMilliseconds() > 0;
+    min.setSeconds(0, 0);
+    if (shouldBumpMinute) {
+      min.setMinutes(min.getMinutes() + 1);
+    }
+
+    return min;
+  };
+
   useEffect(() => {
     fetchPatients();
     fetchDoctors();
+  }, []);
+
+  useEffect(() => {
+    const updateMin = () => setMinAppointmentTime(toDateTimeLocal(getMinSelectableDateTime()));
+    updateMin();
+    const intervalId = setInterval(updateMin, 30 * 1000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchPatients = async () => {
@@ -79,6 +112,15 @@ function BookAppointment() {
       setError('Please select appointment time');
       return false;
     }
+
+    // Prevent past times even if the user types manually.
+    const selected = new Date(formData.appointmentTime);
+    const minAllowed = minAppointmentTime ? new Date(minAppointmentTime) : getMinSelectableDateTime();
+    if (!Number.isNaN(selected.getTime()) && selected < minAllowed) {
+      setError('Appointment time cannot be before the current time');
+      return false;
+    }
+
     return true;
   };
 
@@ -137,7 +179,7 @@ function BookAppointment() {
             <option value="">Choose a doctor</option>
             {doctors.map(doctor => (
               <option key={doctor.id} value={doctor.id}>
-                {doctor.name} - {doctor.specialization}
+                {doctor.name} - {doctor.specialization} ({doctor.status})
               </option>
             ))}
           </select>
@@ -151,6 +193,7 @@ function BookAppointment() {
             name="appointmentTime"
             value={formData.appointmentTime}
             onChange={handleChange}
+            min={minAppointmentTime}
             disabled={loading}
           />
         </div>

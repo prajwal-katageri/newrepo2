@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hospital OPD Management System — Project Report</title>
+  <style>
+    @page { size: A4; margin: 18mm; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.35; color: #111; }
+    h1 { font-size: 20pt; margin: 0 0 8px 0; }
+    h2 { font-size: 14pt; margin: 18px 0 6px; page-break-after: avoid; }
+    h3 { font-size: 12pt; margin: 12px 0 6px; page-break-after: avoid; }
+    p { margin: 6px 0; }
+    ul { margin: 6px 0 6px 18px; }
+    li { margin: 3px 0; }
+    code { font-family: Consolas, "Courier New", monospace; font-size: 10pt; }
+    .meta { margin: 0 0 14px 0; }
+    .meta strong { display: inline-block; min-width: 64px; }
+    .hr { border-top: 1px solid #ddd; margin: 12px 0; }
+    .pagebreak { page-break-before: always; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; vertical-align: top; }
+    th { background: #f6f6f6; text-align: left; }
+    .small { font-size: 10pt; color: #333; }
+  </style>
+</head>
+<body>
+  <h1>Hospital OPD Management System — Project Report</h1>
+  <div class="meta">
+    <div><strong>Date</strong> 04 Jan 2026</div>
+    <div><strong>Scope</strong> React frontend + Spring Boot backend + MongoDB</div>
+  </div>
+  <div class="hr"></div>
+
+  <h2>1. Overview</h2>
+  <p>
+    The <strong>Hospital OPD Management System</strong> is a full‑stack web application built to support outpatient
+    department (OPD) workflows: patient registration, doctor management, and appointment booking.
+  </p>
+  <p>
+    The system is split into two deployable parts:
+  </p>
+  <ul>
+    <li><strong>Backend</strong>: Spring Boot REST API with MongoDB persistence.</li>
+    <li><strong>Frontend</strong>: React single‑page application (SPA) using React Router.</li>
+  </ul>
+  <p>
+    Primary goals:
+  </p>
+  <ul>
+    <li>Maintain a clean record of <strong>Patients</strong>, <strong>Doctors</strong>, and <strong>Appointments</strong>.</li>
+    <li>Provide a simple UI for staff to add/list/delete records and book appointments.</li>
+    <li>Track doctor availability via a three‑state status model: <strong>active</strong>, <strong>busy</strong>, <strong>inactive</strong>.</li>
+  </ul>
+
+  <h2>2. Technology Stack</h2>
+  <h3>Backend</h3>
+  <ul>
+    <li>Java 21</li>
+    <li>Spring Boot (Web, Data MongoDB, Security)</li>
+    <li>Bean Validation (Jakarta Validation)</li>
+    <li>MongoDB</li>
+  </ul>
+
+  <h3>Frontend</h3>
+  <ul>
+    <li>React + React Router</li>
+    <li>Axios</li>
+    <li>Tailwind (configured) + app CSS</li>
+  </ul>
+
+  <h2>3. Repository Structure (High Level)</h2>
+  <ul>
+    <li><code>backend/</code>: Spring Boot project
+      <ul>
+        <li><code>src/main/java/com/hospital/opd/</code>: controllers, services, repositories, models</li>
+        <li><code>src/main/resources/application.properties</code>: MongoDB + server port</li>
+      </ul>
+    </li>
+    <li><code>opd-frontend/</code>: React application
+      <ul>
+        <li><code>src/pages/</code>: Patients, Doctors, Appointments, Auth</li>
+        <li><code>src/services/</code>: Axios service modules</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2 class="pagebreak">4. Functional Modules</h2>
+  <h3>4.1 Authentication</h3>
+  <p>
+    The UI provides Login and Register pages. Route protection is handled by a token gate in the client
+    (a token stored in <code>localStorage</code>).
+  </p>
+  <table>
+    <thead><tr><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>POST /api/auth/register</code></td><td>Registers a new user</td></tr>
+      <tr><td><code>POST /api/auth/login</code></td><td>Returns a token string</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 Patient Management</h3>
+  <table>
+    <thead><tr><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET /api/patients</code></td><td>Lists patients</td></tr>
+      <tr><td><code>POST /api/patients</code></td><td>Creates a patient</td></tr>
+      <tr><td><code>DELETE /api/patients/{id}</code></td><td>Deletes a patient</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.3 Doctor Management</h3>
+  <p>
+    Doctors can be created, listed, filtered by status, deleted, and manually set inactive/active.
+  </p>
+  <table>
+    <thead><tr><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET /api/doctors</code></td><td>Lists all doctors (with computed status)</td></tr>
+      <tr><td><code>GET /api/doctors/{id}</code></td><td>Gets doctor by id</td></tr>
+      <tr><td><code>GET /api/doctors/status/{status}</code></td><td>Filters doctors by stored status value</td></tr>
+      <tr><td><code>GET /api/doctors/specialization/{specialization}</code></td><td>Filters doctors by specialization</td></tr>
+      <tr><td><code>POST /api/doctors</code></td><td>Creates doctor (validates phone)</td></tr>
+      <tr><td><code>PUT /api/doctors/{id}</code></td><td>Updates doctor (supports manual status)</td></tr>
+      <tr><td><code>DELETE /api/doctors/{id}</code></td><td>Deletes doctor</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.4 Appointment Management</h3>
+  <p>
+    Appointments are booked with a selected patient, selected doctor, and date/time.
+    The backend prevents booking an appointment in the past.
+  </p>
+  <table>
+    <thead><tr><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>POST /api/appointments</code></td><td>Books appointment (sets status=booked)</td></tr>
+      <tr><td><code>GET /api/appointments</code></td><td>Lists all appointments</td></tr>
+      <tr><td><code>GET /api/appointments/patient/{patientId}</code></td><td>Appointments for a patient</td></tr>
+      <tr><td><code>GET /api/appointments/doctor/{doctorId}</code></td><td>Appointments for a doctor</td></tr>
+      <tr><td><code>PUT /api/appointments/{id}/complete</code></td><td>Marks completed</td></tr>
+      <tr><td><code>PUT /api/appointments/{id}/cancel</code></td><td>Marks cancelled</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="pagebreak">5. Data Storage (MongoDB)</h2>
+  <p>
+    Database name: <code>hospital_db</code>
+  </p>
+  <p>
+    Collections:
+  </p>
+  <ul>
+    <li><code>patients</code></li>
+    <li><code>doctors</code></li>
+    <li><code>appointments</code></li>
+    <li><code>users</code></li>
+  </ul>
+  <p class="small">
+    Spring Data Mongo repositories (<code>MongoRepository</code>) provide CRUD access.
+  </p>
+
+  <h2>6. Doctor Status Rules (Active / Busy / Inactive)</h2>
+  <p>
+    The system supports three statuses:
+  </p>
+  <ul>
+    <li><strong>inactive</strong>: doctor is not available right now</li>
+    <li><strong>busy</strong>: doctor has an upcoming booked appointment</li>
+    <li><strong>active</strong>: doctor is available and not booked</li>
+  </ul>
+  <p>
+    Rules used by the backend when returning doctors:
+  </p>
+  <ol>
+    <li>If the doctor is manually set to <code>inactive</code>, the API keeps it <code>inactive</code>.</li>
+    <li>Otherwise, if current time is outside <code>availableTime</code>, the API returns <code>inactive</code>.</li>
+    <li>Otherwise, if any upcoming appointment with status <code>booked</code> exists, the API returns <code>busy</code>.</li>
+    <li>Otherwise, the API returns <code>active</code>.</li>
+  </ol>
+  <p>
+    Available time parsing supports examples like <code>9:00 AM - 5:00 PM</code> and <code>09:00 - 17:00</code>, including overnight ranges.
+  </p>
+
+  <h2>7. Input Validation (Doctor Phone)</h2>
+  <p>
+    Doctor phone numbers are enforced as <strong>exactly 10 digits</strong>.
+  </p>
+  <ul>
+    <li>Frontend: digits‑only input, max length 10, regex validation.</li>
+    <li>Backend: Bean Validation ensures requests cannot store invalid phone numbers.</li>
+  </ul>
+
+  <h2>8. Configuration & Runtime</h2>
+  <ul>
+    <li>Backend port: <code>8081</code></li>
+    <li>MongoDB: <code>mongodb://localhost:27017/hospital_db</code></li>
+    <li>Frontend: <code>http://localhost:3000</code></li>
+  </ul>
+
+  <h2>9. Security Notes</h2>
+  <p>
+    The backend includes Spring Security but currently permits most requests. The frontend applies a token gate,
+    but server‑side JWT authorization is not enforced.
+  </p>
+  <p>
+    Recommendation: add a JWT authentication filter and protect API routes server‑side.
+  </p>
+
+  <h2>10. Known Limitations & Suggested Enhancements</h2>
+  <ul>
+    <li>“Busy” is currently computed as existence of upcoming booked appointments, not time‑overlap per slot.</li>
+    <li>For production use, implement server‑side authorization and token verification.</li>
+    <li>Consider adding edit/update pages for patients and doctors.</li>
+  </ul>
+
+  <h2>11. How to Run</h2>
+  <h3>Prerequisites</h3>
+  <ul>
+    <li>MongoDB running locally</li>
+    <li>Node.js + npm</li>
+    <li>Java 21</li>
+  </ul>
+
+  <h3>Backend</h3>
+  <p>From <code>backend/</code>:</p>
+  <p><code>./mvnw.cmd spring-boot:run</code></p>
+
+  <h3>Frontend</h3>
+  <p>From <code>opd-frontend/</code>:</p>
+  <p><code>npm install</code> then <code>npm start</code></p>
+
+  <div class="hr"></div>
+  <p class="small">End of report.</p>
+</body>
+</html>

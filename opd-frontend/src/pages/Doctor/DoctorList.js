@@ -40,6 +40,17 @@ function DoctorList() {
     }
   };
 
+  const handleStatusChange = async (id, status) => {
+    setError('');
+    try {
+      const updated = await doctorService.updateDoctor(id, { status });
+      setDoctors(prev => prev.map(d => (d.id === id ? updated : d)));
+    } catch (err) {
+      setError('Failed to update doctor status');
+      console.error('Error:', err);
+    }
+  };
+
   const filteredDoctors = filterStatus === 'all' 
     ? doctors 
     : doctors.filter(doctor => doctor.status === filterStatus);
@@ -103,6 +114,21 @@ function DoctorList() {
                   </span>
                 </td>
                 <td className="action-buttons">
+                  {doctor.status === 'inactive' ? (
+                    <button
+                      className="btn-sm btn-primary"
+                      onClick={() => handleStatusChange(doctor.id, 'active')}
+                    >
+                      Set Active
+                    </button>
+                  ) : (
+                    <button
+                      className="btn-sm btn-secondary"
+                      onClick={() => handleStatusChange(doctor.id, 'inactive')}
+                    >
+                      Set Inactive
+                    </button>
+                  )}
                   <button 
                     className="btn-sm btn-danger"
                     onClick={() => handleDelete(doctor.id)}

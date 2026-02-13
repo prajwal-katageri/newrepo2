@@ -1,0 +1,12 @@
+{
+  "name": "hospital-opd",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"cd backend && .\\\\mvnw.cmd -DskipTests spring-boot:run\" \"cd opd-frontend && set PORT=3000 && npm start\"",
+    "dev:backend": "cd backend && .\\\\mvnw.cmd -DskipTests spring-boot:run",
+    "dev:frontend": "cd opd-frontend && set PORT=3000 && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

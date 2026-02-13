@@ -1,5 +1,7 @@
 package com.hospital.opd.models;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -19,6 +21,8 @@ public class Doctor {
     
     private String email;
     
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^\\d{10}$", message = "Phone number must be exactly 10 digits")
     private String phone;
     
     private String availableTime;

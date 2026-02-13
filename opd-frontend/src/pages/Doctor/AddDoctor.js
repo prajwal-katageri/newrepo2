@@ -17,6 +17,16 @@ function AddDoctor() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'phone') {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: digitsOnly
+      }));
+      return;
+    }
+
     setFormData(prevState => ({
       ...prevState,
       [name]: value
@@ -45,6 +55,12 @@ function AddDoctor() {
       setError('Phone number is required');
       return false;
     }
+
+    if (!/^\d{10}$/.test(formData.phone)) {
+      setError('Phone number must be exactly 10 digits');
+      return false;
+    }
+
     if (!formData.availableTime.trim()) {
       setError('Available time is required');
       return false;
@@ -132,6 +148,9 @@ function AddDoctor() {
             name="phone"
             value={formData.phone}
             onChange={handleChange}
+            inputMode="numeric"
+            pattern="\d{10}"
+            maxLength={10}
             placeholder="Enter phone number"
             disabled={loading}
           />

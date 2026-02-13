@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hospital OPD — Total Project Report (Workflow + Code)</title>
+  <style>
+    @page { size: A4; margin: 16mm; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; line-height: 1.35; color: #111; }
+    h1 { font-size: 18pt; margin: 0 0 8px 0; }
+    h2 { font-size: 13pt; margin: 16px 0 6px; page-break-after: avoid; }
+    h3 { font-size: 11.5pt; margin: 12px 0 6px; page-break-after: avoid; }
+    p { margin: 6px 0; }
+    ul { margin: 6px 0 6px 18px; }
+    li { margin: 3px 0; }
+    .meta { margin: 0 0 10px 0; }
+    .hr { border-top: 1px solid #ddd; margin: 10px 0; }
+    .pagebreak { page-break-before: always; }
+    .muted { color: #444; }
+    .box { border: 1px solid #e5e5e5; background: #fafafa; padding: 10px 12px; border-radius: 6px; }
+    pre { margin: 8px 0; padding: 10px 12px; border-radius: 6px; background: #0b1020; color: #e6edf3; overflow-x: auto; }
+    code { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; }
+    pre code { font-size: 9pt; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; vertical-align: top; }
+    th { background: #f6f6f6; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Hospital OPD Management System — Total Project Report</h1>
+  <div class="meta">
+    <div><strong>Date:</strong> 04 Jan 2026</div>
+    <div><strong>Includes:</strong> Workflow explanation + key code excerpts</div>
+    <div><strong>Stack:</strong> React + Spring Boot + MongoDB</div>
+  </div>
+  <div class="hr"></div>
+
+  <h2>1. Project Objective</h2>
+  <p>
+    This project implements a basic OPD (Out‑Patient Department) management system for:
+    <strong>Patient records</strong>, <strong>Doctor records</strong>, and <strong>Appointment booking</strong>.
+  </p>
+  <p>
+    It provides a React UI and a Spring Boot REST API backed by MongoDB.
+  </p>
+
+  <h2>2. High-Level Architecture</h2>
+  <div class="box">
+    <p><strong>Frontend (React)</strong> → Axios HTTP calls → <strong>Backend (Spring Boot REST)</strong> → Spring Data Repositories → <strong>MongoDB</strong></p>
+    <p class="muted">
+      Frontend runs on <code>http://localhost:3000</code>. Backend runs on <code>http://localhost:8081</code>.
+    </p>
+  </div>
+
+  <h2>3. Main User Workflow (End-to-End)</h2>
+  <h3>3.1 Login / Register</h3>
+  <ul>
+    <li>User registers using the Register page → calls <code>POST /api/auth/register</code>.</li>
+    <li>User logs in using Login page → calls <code>POST /api/auth/login</code> → backend returns a token string.</li>
+    <li>Frontend stores token in <code>localStorage</code>. <code>ProtectedRoute</code> checks token before allowing access to app routes.</li>
+  </ul>
+
+  <h3>3.2 Patient Management</h3>
+  <ul>
+    <li>Patients page loads by calling <code>GET /api/patients</code>.</li>
+    <li>Add Patient form validates client-side (including 10-digit mobile) and calls <code>POST /api/patients</code>.</li>
+    <li>Delete patient calls <code>DELETE /api/patients/{id}</code> and updates UI state.</li>
+  </ul>
+
+  <h3>3.3 Doctor Management</h3>
+  <ul>
+    <li>Add Doctor validates phone number as exactly 10 digits, then calls <code>POST /api/doctors</code>.</li>
+    <li>Doctors list calls <code>GET /api/doctors</code> and shows status badges and filtering.</li>
+    <li>Status can be set manually from UI to <code>inactive</code> or back to <code>active</code> using <code>PUT /api/doctors/{id}</code>.</li>
+  </ul>
+
+  <h3>3.4 Appointment Booking</h3>
+  <ul>
+    <li>Booking screen loads patients and doctors.</li>
+    <li>User selects patient, doctor, and datetime.</li>
+    <li>Frontend prevents selecting past dates; backend also rejects past times.</li>
+    <li>Booking calls <code>POST /api/appointments</code> and sets appointment status to <code>booked</code>.</li>
+  </ul>
+
+  <h2 class="pagebreak">4. Backend Workflow (Spring Boot)</h2>
+  <h3>4.1 Application Entry</h3>
+  <p>The application starts via Spring Boot auto-configuration:</p>
+  <pre><code>package com.hospital.opd;
+
+@SpringBootApplication
+public class HospitalOpdApplication {
+  public static void main(String[] args) {
+    SpringApplication.run(HospitalOpdApplication.class, args);
+  }
+}</code></pre>
+
+  <h3>4.2 Controllers → Services → Repositories</h3>
+  <p>
+    Controllers expose REST endpoints. Controllers call Services. Services call Spring Data Repositories.
+    Mongo repositories persist and query data.
+  </p>
+
+  <h3>4.3 Authentication Flow (Register + Login)</h3>
+  <p>
+    <strong>AuthController</strong> receives requests and calls <strong>AuthService</strong>.
+    Passwords are hashed using BCrypt. Login returns a JWT token.
+  </p>
+  <pre><code>// AuthServiceImpl (key logic)
+@Override
+public User register(User user) {
+  user.setPassword(passwordEncoder.encode(user.getPassword()));
+  return userRepository.save(user);
+}
+
+@Override
+public String login(String username, String password) {
+  User user = userRepository.findByUsername(username)
+    .orElseThrow(() -> new RuntimeException("User not found"));
+
+  if (!passwordEncoder.matches(password, user.getPassword())) {
+    throw new RuntimeException("Invalid password");
+  }
+
+  return jwtUtil.generate(username, user.getRole());
+}</code></pre>
+  <p class="muted">
+    Note: the backend currently permits most requests; the token is used mainly on the frontend route gate.
+  </p>
+
+  <h3>4.4 Patient CRUD Flow</h3>
+  <p>
+    Patient endpoints call <code>PatientServiceImpl</code> which delegates to <code>PatientRepository</code>.
+  </p>
+  <pre><code>// PatientServiceImpl
+@Override
+public List&lt;Patient&gt; getAllPatients() {
+  return patientRepository.findAll();
+}
+
+@Override
+public Patient savePatient(Patient patient) {
+  return patientRepository.save(patient);
+}
+
+@Override
+public void deletePatient(String id) {
+  patientRepository.deleteById(id);
+}</code></pre>
+
+  <h3>4.5 Appointment Booking Validation</h3>
+  <p>
+    Booking prevents invalid appointments server-side (time required and cannot be in the past).
+  </p>
+  <pre><code>// AppointmentServiceImpl.bookAppointment
+if (appointment.getAppointmentTime() == null) {
+  throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Appointment time is required");
+}
+if (appointment.getAppointmentTime().isBefore(LocalDateTime.now())) {
+  throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Appointment time cannot be in the past");
+}
+appointment.setStatus("booked");
+return appointmentRepository.save(appointment);</code></pre>
+
+  <h3>4.6 Doctor Phone Validation (Backend)</h3>
+  <p>
+    Doctor phone is enforced as exactly 10 digits using Bean Validation.
+    When controller uses <code>@Valid</code>, invalid requests return 400.
+  </p>
+  <pre><code>// Doctor model (excerpt)
+@NotBlank(message = "Phone number is required")
+@Pattern(regexp = "^\\d{10}$", message = "Phone number must be exactly 10 digits")
+private String phone;</code></pre>
+
+  <h3>4.7 Doctor Status Workflow (Active / Busy / Inactive)</h3>
+  <p>
+    Status is computed when returning doctors:
+  </p>
+  <ul>
+    <li>If doctor is manually set to <code>inactive</code>, it stays <code>inactive</code>.</li>
+    <li>Else if current time is outside <code>availableTime</code> → <code>inactive</code>.</li>
+    <li>Else if any upcoming appointment with status <code>booked</code> exists → <code>busy</code>.</li>
+    <li>Else → <code>active</code>.</li>
+  </ul>
+  <pre><code>// DoctorServiceImpl.applyComputedStatus (simplified excerpt)
+if ("inactive".equalsIgnoreCase(doctor.getStatus())) {
+  doctor.setStatus("inactive");
+  return;
+}
+
+if (!isCurrentlyWithinAvailableTime(doctor.getAvailableTime())) {
+  doctor.setStatus("inactive");
+  return;
+}
+
+boolean hasBookedAppointment = appointmentRepository
+  .findByDoctorId(doctor.getId())
+  .stream()
+  .anyMatch(a -> "booked".equalsIgnoreCase(a.getStatus())
+    &amp;&amp; a.getAppointmentTime() != null
+    &amp;&amp; !a.getAppointmentTime().isBefore(LocalDateTime.now()));
+
+doctor.setStatus(hasBookedAppointment ? "busy" : "active");</code></pre>
+
+  <h2 class="pagebreak">5. Frontend Workflow (React)</h2>
+  <h3>5.1 Routing + Route Protection</h3>
+  <p>
+    React Router defines public auth routes and protected application routes.
+    <code>ProtectedRoute</code> checks token in localStorage.
+  </p>
+  <pre><code>// ProtectedRoute
+const token = localStorage.getItem("token");
+if (!token) {
+  return &lt;Navigate to="/login" replace /&gt;;
+}
+return children;</code></pre>
+
+  <h3>5.2 API Services (Axios)</h3>
+  <p>
+    The frontend uses service modules wrapping Axios calls.
+  </p>
+  <pre><code>// doctorService base URL
+const BASE_URL = 'http://localhost:8081/api/doctors';
+
+// addDoctor
+const response = await axios.post(BASE_URL, doctor);
+return response.data;</code></pre>
+
+  <h3>5.3 Add Doctor — Phone Validation (UI)</h3>
+  <p>
+    The Add Doctor form filters to digits only and limits to 10 digits.
+    Submit validation enforces exactly 10 digits.
+  </p>
+  <pre><code>// AddDoctor.handleChange (phone)
+if (name === 'phone') {
+  const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+  setFormData(prev =&gt; ({ ...prev, [name]: digitsOnly }));
+  return;
+}
+
+// validateForm
+if (!/^\d{10}$/.test(formData.phone)) {
+  setError('Phone number must be exactly 10 digits');
+  return false;
+}</code></pre>
+
+  <h3>5.4 Doctor List — Manual Inactive / Active Toggle</h3>
+  <p>
+    The Doctors list includes buttons to set a doctor inactive or active (writes status back via API).
+  </p>
+  <pre><code>// DoctorList.handleStatusChange
+const updated = await doctorService.updateDoctor(id, { status });
+setDoctors(prev =&gt; prev.map(d =&gt; (d.id === id ? updated : d)));</code></pre>
+
+  <h3>5.5 Appointment Booking Screen</h3>
+  <p>
+    Booking screen loads doctors and patients, and shows doctor status in the dropdown.
+  </p>
+  <pre><code>// Doctor option label
+{doctor.name} - {doctor.specialization} ({doctor.status})</code></pre>
+
+  <h2>6. How to Run (Local)</h2>
+  <ul>
+    <li>MongoDB: <code>mongodb://localhost:27017</code> (DB: <code>hospital_db</code>)</li>
+    <li>Backend: run from <code>backend/</code> using <code>./mvnw.cmd spring-boot:run</code></li>
+    <li>Frontend: run from <code>opd-frontend/</code> using <code>npm start</code></li>
+  </ul>
+
+  <h2>7. Notes About “Full Code in PDF”</h2>
+  <p>
+    A full repository code dump would create a very large PDF. This report includes the most important
+    workflow code excerpts (controllers/services/pages) and the rest of the complete source code is already
+    available in the project folder.
+  </p>
+
+  <div class="hr"></div>
+  <p class="muted">End of total project report.</p>
+</body>
+</html>
